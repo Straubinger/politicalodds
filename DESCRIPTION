@@ -1,0 +1,19 @@
+Package: politicalodds
+Type: Package
+Title: Scrapes Political Odds
+Version: 0.1.0
+Authors@R: 
+    person(given = "Simon Grundt",
+           family = "Straubinger",
+           role = c("aut", "cre"),
+           email = "simon.wismar@gmail.com")
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: Scrapes poltical odds from betting sites on a schedule with GitHub Actions
+    and commiting them to GitHub repository .
+License: MIT + file LICENSE
+Imports:
+    dplyr (>= 1.0.5),
+    magrittr (>= 2.0.1),
+    rvest (>= 1.0.0)
+Encoding: UTF-8
+LazyData: true
