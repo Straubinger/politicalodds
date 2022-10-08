@@ -1,35 +1,39 @@
 
 # Load packages -----------------------------------------------------------
 
-library(dplyr)    # CRAN v1.0.5
-library(magrittr) # CRAN v2.0.1
-library(rvest)    # CRAN v1.0.0
+library(dplyr)
+library(tidyr)
+library(jsonlite)
+library(httr)
 
 
-# Scrape odds from NordicBet ----------------------------------------------
+# Odds from Danske Spil ---------------------------------------------------
 
-ldf <- list()
+danskespil_api <- GET("https://content.sb.danskespil.dk/content-service/api/v1/q/event-list?eventSortsIncluded=TNMT&includeChildMarkets=true&drilldownTagIds=20193")
 
-nordicbet_html <- read_html("https://www.nordicbet.dk/betting/politik-og-finans/danmark/dansk-politik?tab=outrights")
+danskespil_json <- danskespil_api |>
+  content("text", encoding = "UTF-8") |>
+  fromJSON(flatten = TRUE)
 
-for (i in c(".obg-selection-content-label", ".obg-numeric-change span")) {
-  ldf[[i]] <- nordicbet_html %>%
-    html_nodes(i) %>%
-    html_text()
-}
-
-df_nordicbets <- as.data.frame(do.call("cbind", ldf)) %>%
-  rename(pm = ".obg-selection-content-label",
-         odds = ".obg-numeric-change span") %>%
-  mutate(bettingfirm = "NordicBet",
-         timestamp = as.character(Sys.time()),
-         odds = as.numeric(odds))
+danskespil_data <- as.data.frame(danskespil_json$data$events) |>
+  filter(name == "Statsminister efter næste folketingsvalg") |>
+  unnest(markets, names_repair = "unique") |>
+  unnest(outcomes, names_repair = "unique") |>
+  unnest(prices, names_repair = "unique") |>
+  select("spil" = name...5,
+         "kandidat" = name...61,
+         numerator,
+         denominator,
+         decimal) |>
+  mutate(ts = Sys.time(),
+         bookmaker = "Danske Spil")
 
 
 # Write data to CSV -------------------------------------------------------
 
-df <- read.csv("data-odds/odds_data.csv") %>%
-  bind_rows(df_nordicbets)
+df <- read.csv("data-odds/odds_data.csv") |>
+  mutate(ts = as.POSIXct(ts)) |>
+  bind_rows(danskespil_data)
 
 write.csv(df, "data-odds/odds_data.csv", row.names = FALSE)
 
