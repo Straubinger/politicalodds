@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(jsonlite)
 library(httr)
+library(curl)
 
 
 # Odds from Danske Spil ---------------------------------------------------
